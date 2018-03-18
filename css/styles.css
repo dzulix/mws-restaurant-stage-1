@@ -39,7 +39,6 @@ article, aside, canvas, details, figcaption, figure, footer, header, hgroup, men
 }
 #maincontent {
   background-color: #f3f3f3;
-  min-height: 100%;
 }
 #footer {
   background-color: #444;
@@ -189,8 +188,6 @@ nav h1 a {
 
 /* ====================== Restaurant Details ====================== */
 .inside header {
-  top: 0;
-  width: 100%;
   z-index: 1000;
 }
 .inside #map-container {
@@ -206,7 +203,6 @@ nav h1 a {
   width: 100%;
 }
 .inside #footer {
-  bottom: 0;
   width: 100%;
 }
 #restaurant-name {
@@ -313,6 +309,12 @@ nav h1 a {
 
 @media only screen and (max-width: 768px) {
   .inside #map-container {
+    width: 100%;
+    height: 350px;
+    position: initial;
+  }
+
+  #restaurant-container, #reviews-container {
     width: 100%;
   }
 
