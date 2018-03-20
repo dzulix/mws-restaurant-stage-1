@@ -2,6 +2,7 @@
 /* CSS Document */
 * {
   box-sizing: border-box;
+    word-break: break-word;
 }
 body,td,th,p{
 	font-family: Arial, Helvetica, sans-serif;
@@ -53,7 +54,7 @@ article, aside, canvas, details, figcaption, figure, footer, header, hgroup, men
 nav {
   display: flex;
   width: 100%;
-  height: 80px;
+  min-height: 80px;
   background-color: #252831;
   text-align:center;
 }
@@ -62,9 +63,8 @@ nav h1 {
 }
 nav h1 a {
   color: #fff;
-  font-size: 14pt;
   font-weight: 200;
-  letter-spacing: 10px;
+  letter-spacing: 5px;
   text-transform: uppercase;
 }
 #breadcrumb {
@@ -127,7 +127,7 @@ nav h1 a {
   letter-spacing: 0;
   margin: 10px;
   padding: 0 10px;
-  width: 200px;
+  max-width: calc(100% - 20px);
 }
 
 /* ====================== Restaurant Listing ====================== */
@@ -147,6 +147,7 @@ nav h1 a {
   font-family: Arial,sans-serif;
   margin: 15px;
   min-height: 380px;
+  height: 100%;
   padding: 25px 30px;
   text-align: left;
   width: 270px;
@@ -155,12 +156,11 @@ nav h1 a {
   background-color: #ccc;
   display: block;
   margin: 0;
-  max-width: 100%;
-  min-height: 248px;
-  min-width: 100%;
+  height: 100%;
+  width: 100%;
 }
 #restaurants-list li h1 {
-  color: #f18200;
+  color: orange;
   font-family: Arial,sans-serif;
   font-size: 14pt;
   font-weight: 200;
@@ -179,22 +179,27 @@ nav h1 a {
   color: #fff;
   display: inline-block;
   font-size: 10pt;
-  margin: 15px 0 0;
-  padding: 8px 30px 10px;
+  margin: 16px 0 0;
+  padding: 13px 30px;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
 }
 
 /* ====================== Restaurant Details ====================== */
+
+
 .inside header {
+  width: 50%;
   z-index: 1000;
 }
 .inside #map-container {
   background: blue none repeat scroll 0 0;
-  height: 87%;
+  height: 100%;
   position: fixed;
   right: 0;
+  top: 0;
+  bottom: 0;
   width: 50%;
 }
 .inside #map {
@@ -203,7 +208,7 @@ nav h1 a {
   width: 100%;
 }
 .inside #footer {
-  width: 100%;
+  width: 50%;
 }
 #restaurant-name {
   color: #f18200;
@@ -228,7 +233,7 @@ nav h1 a {
   color: #ddd;
   font-size: 12pt;
   font-weight: 300;
-  letter-spacing: 10px;
+  letter-spacing: 5px;
   padding: 2px 0;
   text-align: center;
   text-transform: uppercase;
@@ -308,6 +313,12 @@ nav h1 a {
 
 
 @media only screen and (max-width: 768px) {
+  .inside header {
+    width: 100%;
+  }
+  .inside #footer {
+    width: 100%;
+  }
   .inside #map-container {
     width: 100%;
     height: 350px;
