@@ -67,12 +67,18 @@ nav h1 a {
   letter-spacing: 5px;
   text-transform: uppercase;
 }
+
+nav[aria-label="Breadcrumb"] {
+  min-height: auto;
+}
+
 #breadcrumb {
-    padding: 10px 40px 16px;
-    list-style: none;
-    background-color: #eee;
-    font-size: 17px;
-    margin: 0;
+  width:100%;
+  padding: 10px 40px 16px;
+  list-style: none;
+  background-color: #eee;
+  font-size: 17px;
+  margin: 0;
 }
 
 /* Display list items side by side */
@@ -159,7 +165,7 @@ nav h1 a {
   height: 100%;
   width: 100%;
 }
-#restaurants-list li h1 {
+#restaurants-list li h2 {
   color: orange;
   font-family: Arial,sans-serif;
   font-size: 14pt;
