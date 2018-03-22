@@ -1,0 +1,24 @@
+{
+  "background_color": "#cccccc",
+  "theme_color": "#3397DB",
+  "short_name": "RReviews",
+  "name": "Restaurants Reviews",
+  "display": "standalone",
+  "icons": [
+      {
+        "src": "img/icon.png",
+        "type": "image/png",
+        "sizes": "48x48"
+      },
+      {
+        "src": "img/icon.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "img/icon.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ]
+}

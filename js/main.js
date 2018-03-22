@@ -1,3 +1,4 @@
+
 let restaurants,
   neighborhoods,
   cuisines
@@ -8,8 +9,38 @@ var markers = []
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-  fetchNeighborhoods();
-  fetchCuisines();
+
+
+  const dbPromise = DBHelper.initializeDB();
+  dbPromise.then(function(db) {
+    let tx = db.transaction('restaurants', 'readonly');
+    let objectStore = tx.objectStore('restaurants');
+    const data = objectStore.getAll();
+    return data;
+  })
+    .then((data) => {
+      console.log(data.length)
+      if (data.length === 0) {
+        fetch(DBHelper.DATABASE_URL).then((response) => {
+        response.json()
+        .then(restaurants => {
+          dbPromise.then((db) => { 
+            let tx = db.transaction('restaurants', 'readwrite'); 
+            let objectStore = tx.objectStore('restaurants'); 
+            restaurants.forEach(restaurant => { 
+              objectStore.put(restaurant); 
+            });
+          });
+        })
+      });
+      } else {
+        DBHelper.data = data;
+      }
+  })
+  .then(data => {
+    fetchNeighborhoods();
+    fetchCuisines();
+  });
 });
 
 /**
