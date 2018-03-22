@@ -3,12 +3,12 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3397DB"/>
   <!-- Normalize.css for better cross-browser consistency -->
   <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
   <!-- Main CSS file -->
   <link rel="stylesheet" href="css/styles.css" type="text/css">
-  <title>Restaurant Info</title>
-
+  <link rel="manifest" href="/manifest.json">
   <script>
     (() => {
       'use strict';
@@ -25,6 +25,7 @@
         });
     })();
   </script>
+  <title>Restaurant Info</title>
 </head>
 
 <body class="inside">
@@ -82,7 +83,7 @@
   <!-- Main javascript file -->
   <script type="text/javascript" src="js/restaurant_info.js"></script>
   <!-- Google Maps -->
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWDML9qjrchGB07sk8qWpoPVZno2FZ2N8&libraries=places&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWDML9qjrchGB07sk8qWpoPVZno2FZ2N8&language=en&libraries=places&callback=initMap"></script>
   <!-- End scripts -->
 
 </body>
