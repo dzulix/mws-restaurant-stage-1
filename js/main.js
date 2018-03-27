@@ -9,33 +9,60 @@ var markers = []
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  window.addEventListener('load', function() {
+    sendOfflineData = (event) => {
+    console.log('online')
 
+
+    }
+
+    window.addEventListener('online',  sendOfflineData);
+  });
 
   const dbPromise = DBHelper.initializeDB();
   dbPromise.then(function(db) {
-    let tx = db.transaction('restaurants', 'readonly');
-    let objectStore = tx.objectStore('restaurants');
-    const data = objectStore.getAll();
-    return data;
-  })
-    .then((data) => {
-      console.log(data.length)
+    let tx = db.transaction(db.objectStoreNames, 'readonly');
+    const objectStore = tx.objectStore('restaurants');
+    const data = objectStore.getAll()
+    .then(data => {
       if (data.length === 0) {
         fetch(DBHelper.DATABASE_URL).then((response) => {
-        response.json()
-        .then(restaurants => {
-          dbPromise.then((db) => { 
-            let tx = db.transaction('restaurants', 'readwrite'); 
-            let objectStore = tx.objectStore('restaurants'); 
-            restaurants.forEach(restaurant => { 
-              objectStore.put(restaurant); 
+          response.json()
+          .then(restaurants => {
+            dbPromise.then((db) => { 
+              let tx = db.transaction('restaurants', 'readwrite'); 
+              let objectStore = tx.objectStore('restaurants'); 
+              restaurants.forEach(restaurant => { 
+                objectStore.put(restaurant); 
+              });
             });
-          });
-        })
-      });
+          })
+        });
       } else {
         DBHelper.data = data;
-      }
+      };
+    });    
+
+    const reviewsObjectStore = tx.objectStore('reviews');
+    const reviewsData = objectStore.getAll()
+    .then(reviewsData => {
+      if (reviewsData.length === 0) {
+        fetch(`http://localhost:1337/reviews/`).then((response) => {
+          response.json()
+          .then(reviews => {
+            dbPromise.then((db) => { 
+              let tx = db.transaction('reviews', 'readwrite'); 
+              let objectStore = tx.objectStore('reviews'); 
+              reviews.forEach(review => { 
+                objectStore.put(review); 
+              });
+            });
+          })
+        });
+      } else {
+        DBHelper.reviews = reviews;
+      };
+    });
   })
   .then(data => {
     fetchNeighborhoods();

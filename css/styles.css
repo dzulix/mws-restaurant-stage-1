@@ -201,6 +201,10 @@ nav[aria-label="Breadcrumb"] {
   text-transform: uppercase;
   line-height: 1.1;
 }
+.icon-item {
+  float: right;
+  font-size: 1.5em;
+}
 #restaurant-img {
   width: 100%;
   border-radius: 20px 0 20px 0;
@@ -236,6 +240,40 @@ nav[aria-label="Breadcrumb"] {
   letter-spacing: -1px;
   padding-bottom: 1pt;
 }
+select#rating {
+  background: white;
+  width: 50px;
+}
+textarea#comment {
+  height: 70px;
+}
+#add-review {
+  margin: 16px 0;
+}
+#add-review-button {
+  margin-bottom: 16px;
+  background: #d67200;
+  padding: 10px;
+  text-transform: uppercase;
+  border-radius: 5px;
+  color: #000;
+  font-weight: bold;
+  border: none;
+}
+#add-review .row label {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-size: 16px;
+  margin: 8px 0;
+}
+.row {
+  display: flex;
+}
+#add-review input#name {
+  margin-right: 16px;
+}
+
 #reviews-list {
   margin: 0;
   padding: 0;
