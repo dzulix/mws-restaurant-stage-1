@@ -5,18 +5,18 @@ var map;
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      });
-      fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-    }
+  fetchRestaurantFromURL()
+  .then((restaurant, error) => {
+    self.map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 16,
+      center: restaurant.latlng,
+      scrollwheel: false
+    });
+    fillBreadcrumb();
+    DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+  })
+  .catch(error => {
+    console.log(error);
   });
 }
 
@@ -24,33 +24,44 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
-  if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant)
-    return;
-  }
-  const id = getParameterByName('id');
-  if (!id) { // no id found in URL
-    error = 'No restaurant id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant)
-    });
-  }
+  return new Promise((resolve, reject) => {
+    if (self.restaurant) { // restaurant already fetched!
+      resolve(self.restaurant)
+    }
+    const id = getParameterByName('id');
+    if (!id) { // no id found in URL
+      error = 'No restaurant id in URL'
+      reject(error);
+    } else {
+      return DBHelper.fetchRestaurantById(id)
+      .then((restaurant, error) => {
+        self.restaurant = restaurant;
+        if (!restaurant) {
+          reject(error)
+        }
+        fillRestaurantHTML();
+        resolve(restaurant)
+      });
+    }
+  });
 }
 
 /**
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
+  const icon = document.getElementById('favorite');
+
+  icon.addEventListener('click', (e) => {
+    const favorite = self.restaurant.is_favorite === 'true' ? false : true;
+    DBHelper.setFavorite(restaurant.id, favorite);
+    setFavorite(e.path[0], favorite);
+  });
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
+  name.appendChild(icon);
+  setFavorite(icon, restaurant.is_favorite === 'true' ? true : false);
+
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
@@ -69,6 +80,14 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   }
   // fill reviews
   fillReviewsHTML();
+}
+
+setFavorite = (icon, isFavorite) => {
+  if (isFavorite) {
+    icon.innerHTML = 'favorite';
+  } else {
+    icon.innerHTML = 'favorite_border';
+  }
 }
 
 /**
@@ -91,14 +110,32 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
   }
 }
 
+addReview = () => {
+  const name = document.getElementById('name').value;
+  const rating = document.getElementById('rating').value;
+  const comment = document.getElementById('comment').value;
+  const idRestaurant = self.restaurant.id;
+
+  DBHelper.addReview(idRestaurant, name, rating, comment)
+  .then(review => {
+    const ul = document.getElementById('reviews-list');
+    ul.appendChild(createReviewHTML(review));
+  })
+}
+
 /**
  * Create all reviews HTML and add them to the webpage.
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   const container = document.getElementById('reviews-container');
-  const title = document.createElement('h3');
-  title.innerHTML = 'Reviews';
-  container.appendChild(title);
+  const button = document.getElementById('add-review-button');
+  const rating = document.getElementById('rating');
+  for (let i = 1; i <= 5; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.innerHTML = i;
+    rating.appendChild(option);
+  }
 
   if (!reviews) {
     const noReviews = document.createElement('p');
@@ -125,7 +162,8 @@ createReviewHTML = (review) => {
 
   const date = document.createElement('p');
   date.setAttribute('class', 'date');
-  date.innerHTML = review.date;
+  const newDate = new Date(review.updatedAt) 
+  date.innerHTML = `${newDate.getDay()}/${newDate.getMonth()}/${newDate.getFullYear()}`;
 
   top.appendChild(name);
   top.appendChild(date);
