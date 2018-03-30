@@ -53,7 +53,8 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const icon = document.getElementById('favorite');
 
   icon.addEventListener('click', (e) => {
-    const favorite = self.restaurant.is_favorite === 'true' ? false : true;
+    const favorite = self.restaurant.is_favorite === true ? false : true;
+    self.restaurant.is_favorite = favorite;
     DBHelper.setFavorite(restaurant.id, favorite);
     setFavorite(e.path[0], favorite);
   });

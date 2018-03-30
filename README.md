@@ -4,7 +4,7 @@ To run a project launch a local client server using Python from your terminal:
 
 # python3 -m http.server 8000
 
-You also need a development local API server, which is available here: https://github.com/dzulix/mws-restaurant-stage-2
+You also need a development local API server, which is available here: https://github.com/dzulix/mws-restaurant-stage-3
 
 Install project dependancies
 # npm i

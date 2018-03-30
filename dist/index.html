@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#3397DB"><link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css"><link rel="stylesheet" type="text/css" href="css/restaurant.css"><link rel="stylesheet" type="text/css" href="css/styles.css"><link async rel="manifest" href="/manifest.json"><title>Restaurant Reviews</title><script>(() => {
+      'use strict';
+      if (!('serviceWorker' in navigator)) {
+        console.log('Service worker not supported');
+        return;
+      }
+      navigator.serviceWorker.register('service-worker.js')
+      .then((registration) => {
+        console.log('Registered at scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('Registration failed:', error);
+      });
+
+      navigator.serviceWorker.ready.then(function(swRegistration) {
+        return swRegistration.sync.register('syncOfflineData');
+      });
+    })();</script></head><body><header><nav><h1><a href="/">Restaurant Reviews</a></h1></nav></header><main id="maincontent"><button onclick="toggleMap(this)">Show map</button><section id="map-container" role="application"><div id="map"></div></section><section><div class="filter-options"><h2>Filter Results</h2><select id="neighborhoods-select" name="neighborhoods" aria-label="search by neighborhoods" onchange="updateRestaurants()"><option value="all">All Neighborhoods</option></select><select id="cuisines-select" name="cuisines" aria-label="search by cuisines" onchange="updateRestaurants()"><option value="all">All Cuisines</option></select></div><ul id="restaurants-list"></ul></section></main><footer id="footer">Copyright (c) 2017 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.</footer><script src="/node_modules/idb/lib/idb.js"></script><script type="application/javascript" charset="utf-8" src="dist/js/dbhelper.min.js"></script><script type="application/javascript" charset="utf-8" src="js/main.js"></script><script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWDML9qjrchGB07sk8qWpoPVZno2FZ2N8&language=en&libraries=places&callback=initMap&v=3.exp" async defer="defer"></script></body></html>

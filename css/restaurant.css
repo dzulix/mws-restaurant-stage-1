@@ -1,0 +1,100 @@
+/* ====================== Restaurant Details ====================== */
+
+.inside header {
+  width: 50%;
+  z-index: 1000;
+}
+.inside #map-container {
+  height: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+}
+
+#map-container.hidden {
+  height: 0px;
+  position: unset;
+}
+
+.inside #map {
+  background-color: #ccc;
+  height: 100%;
+  width: 100%;
+}
+.inside #footer {
+  width: 50%;
+}
+#restaurant-name {
+  color: #d67200;
+  font-family: Arial,sans-serif;
+  font-size: 20pt;
+  font-weight: 200;
+  letter-spacing: 0;
+  margin: 15px 0 30px;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+.icon-item {
+  float: right;
+  font-size: 1.5em;
+}
+.restaurant-img {
+  width: 100%;
+  border-radius: 20px 0 20px 0;
+}
+#restaurant-address {
+  font-size: 12pt;
+  margin: 10px 0px;
+}
+#restaurant-cuisine {
+  background-color: #333;
+  color: #ddd;
+  font-size: 12pt;
+  font-weight: 300;
+  letter-spacing: 5px;
+  padding: 2px 0;
+  text-align: center;
+  text-transform: uppercase;
+	width: 100%;
+}
+#restaurant-container, #reviews-container {
+  border-bottom: 1px solid #d9d9d9;
+  border-top: 1px solid #fff;
+  padding: 30px;
+  width: 50%;
+}
+
+nav[aria-label="Breadcrumb"] {
+  min-height: auto;
+}
+#breadcrumb {
+  width:100%;
+  padding: 10px 40px 16px;
+  background-color: #eee;
+  margin: 0;
+}
+
+/* Display list items side by side */
+#breadcrumb li {
+    display: inline;
+}
+
+/* Add a slash symbol (/) before/behind each list item */
+#breadcrumb li+li:before {
+    padding: 8px;
+    color: black;
+    content: "/\00a0";
+}
+
+/* Add a color to all links inside the list */
+#breadcrumb li a {
+    color: #0262b6;
+}
+
+/* Add a color on mouse-over */
+#breadcrumb li a:hover {
+    color: #01447e;
+    text-decoration: underline;
+}
