@@ -5,19 +5,28 @@ let restaurants,
 var map
 var markers = []
 
+  var io = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.intersectionRatio > 0.3) {
+        console.log(entry);
+          let image = entry.target.firstChild;
+          image.src = image.dataset.src;
+        }
+      })
+      console.log(entries);
+    },
+    {
+     root: document.querySelector('#scrollArea'),
+     rootMargin: '0px',
+     threshold: 0.5
+    }
+  );
+
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-  window.addEventListener('load', function() {
-    sendOfflineData = (event) => {
-    console.log('online')
-
-
-    }
-
-    window.addEventListener('online',  sendOfflineData);
-  });
 
   const dbPromise = DBHelper.initializeDB();
   dbPromise.then(function(db) {
@@ -41,6 +50,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
       } else {
         DBHelper.data = data;
       };
+    })
+    .then(data => {
+      fetchNeighborhoods();
+      fetchCuisines();
     });    
 
     const reviewsObjectStore = tx.objectStore('reviews');
@@ -73,7 +86,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 /**
  * Fetch all neighborhoods and set their HTML.
  */
-fetchNeighborhoods = () => {
+fetchNeighborhoods = function() {
   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
     if (error) { // Got an error
       console.error(error);
@@ -133,12 +146,24 @@ window.initMap = () => {
     lat: 40.722216,
     lng: -73.987501
   };
-  self.map = new google.maps.Map(document.getElementById('map'), {
+  map = new google.maps.Map(document.getElementById('map'), {
     zoom: 12,
     center: loc,
-    scrollwheel: false
+    scrollwheel: false,
   });
+
   updateRestaurants();
+}
+
+toggleMap = (e) => {
+  console.log(e)
+  if (e.textContent === 'Show map') {
+    document.getElementById('map-container').style.height = '400px';
+    e.innerHTML = 'Hide map';
+  } else {
+    document.getElementById('map-container').style.height = '0px';
+    e.innerHTML = 'Show map';
+  }
 }
 
 /**
@@ -185,7 +210,9 @@ resetRestaurants = (restaurants) => {
 fillRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
   restaurants.forEach(restaurant => {
-    ul.append(createRestaurantHTML(restaurant));
+    let li = createRestaurantHTML(restaurant);
+    ul.append(li);
+    io.observe(li);
   });
   addMarkersToMap();
 }
@@ -199,7 +226,7 @@ createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   image.className = 'restaurant-img';
   image.alt = `Restaurant ${restaurant.name} (thumbnail)`;
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.dataset.src = DBHelper.imageUrlForRestaurant(restaurant, '-small');
   li.append(image);
 
   const name = document.createElement('h2');
@@ -222,12 +249,8 @@ createRestaurantHTML = (restaurant) => {
   return li
 }
 
-/**
- * Add markers for current restaurants to the map.
- */
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
-    // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
     google.maps.event.addListener(marker, 'click', () => {
       window.location.href = marker.url

@@ -1,4 +1,3 @@
-    let db;
     let data;
     let reviews;
 
@@ -56,34 +55,49 @@ class DBHelper {
       if (!upgradeDb.objectStoreNames.contains('restaurants')) { 
         upgradeDb.createObjectStore('restaurants', {keyPath: 'id'}); 
         upgradeDb.createObjectStore('reviews', {keyPath: 'id'}); 
-        upgradeDb.createObjectStore('offline_reviews', {keyPath: 'id', autoIncrement: true}); 
+        upgradeDb.createObjectStore('offline_reviews', {keyPath: 'id'}); 
+        upgradeDb.createObjectStore('offline_favorite', {keyPath: 'id'}); 
       } 
     });
     return dbPromise;
   }
 
   static setFavorite(id, isFavorite) {
-    fetch(`${DBHelper.DATABASE_URL}/${id}/?is_favorite=${isFavorite}`, {
-      method: 'PUT',
-    }).then(() => {
-      fetch(`${DBHelper.DATABASE_URL}/${id}/`)
-      .then((response) => {
-        response.json()
-        .then(restaurant => {
-          console.log(restaurant)
-          self.restaurant = restaurant;
-          DBHelper.initializeDB()
-          .then(db => {
-            let tx = db.transaction('restaurants', 'readwrite'); 
-            let objectStore = tx.objectStore('restaurants'); 
-            return objectStore.openCursor(id);
-          }).then(cursor => {
-            cursor.update(restaurant)
-            console.log(cursor, cursor.value);
-          });
-          
-        })
+    if (navigator.onLine) {
+      fetch(`${DBHelper.DATABASE_URL}/${id}/?is_favorite=${isFavorite}`, {
+        method: 'PUT',
+      }).then(() => {
+        fetch(`${DBHelper.DATABASE_URL}/${id}/`);
       });
+    } else {
+      const fav = {
+        id: id,
+        is_favorite: isFavorite,
+      }
+      DBHelper.initializeDB()
+      .then(db => {
+        let tx = db.transaction('offline_favorite', 'readwrite'); 
+        let objectStore = tx.objectStore('offline_favorite'); 
+          objectStore.openCursor(fav.id)
+          .then(cursor => {
+            if (cursor === undefined) {
+              objectStore.add(fav);
+            } else {
+              cursor.update(fav)
+            }
+          })
+     
+      });
+    }
+
+    DBHelper.initializeDB()
+    .then(db => {
+      let tx = db.transaction('restaurants', 'readwrite'); 
+      let objectStore = tx.objectStore('restaurants'); 
+      return objectStore.openCursor(id);
+    }).then(cursor => {
+      cursor.update(self.restaurant);
+      window.cursor = cursor;
     });
   }
 
@@ -95,7 +109,6 @@ class DBHelper {
         rating,
         comments
       }
-      console.log(navigator.onLine);
       if (navigator.onLine) {
         DBHelper.fetchReview(review)
         .then(response => {
@@ -138,6 +151,7 @@ class DBHelper {
 
   static addReviewToIndexedDb(review) {
     review.type = 'review';
+    review.id = Date.now();
     DBHelper.initializeDB()
     .then(db => {
       let tx = db.transaction('offline_reviews', 'readwrite'); 
@@ -273,8 +287,8 @@ class DBHelper {
   /**
    * Restaurant image URL.
    */
-  static imageUrlForRestaurant(restaurant) {
-    return restaurant.photograph ? `/img/${restaurant.photograph}.jpeg` : `/img/${restaurant.id}.jpeg`;
+  static imageUrlForRestaurant(restaurant, small = '') {
+    return restaurant.photograph ? `dist/img/${restaurant.photograph}${small}.jpeg` : `dist/img/${restaurant.id}${small}.jpeg`;
   }
 
   /**
