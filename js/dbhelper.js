@@ -16,14 +16,38 @@ class DBHelper {
     return `http://localhost:${port}/restaurants`;
   }
 
-  static fetchReviews(id) {
+  static fetchReviews(id = '') {
     return new Promise((resolve, reject) => {
-      let reviews = DBHelper.reviews;
-      if (reviews === undefined) {
-        fetch(`http://localhost:1337/reviews/?restaurant_id=${id}`)
-        .then(response => response.json())
-        .then(data => resolve(data));
-      }
+      const dbPromise = DBHelper.initializeDB();
+      dbPromise.then(db => {
+        let tx = db.transaction(db.objectStoreNames, 'readonly');
+        const key = id !== '' && id > 0 ? parseInt(id) : '';
+        tx.objectStore('reviews').index('restaurant_id').getAll(key)
+        .then(reviews => {
+          if (reviews.length === 0) {
+            fetch(`http://localhost:1337/reviews/${id !== '' && id > 0 ? `?restaurant_id=${id}` : ''}`)
+            .then(response => {
+              if (response.ok) {
+                response.json()
+                .then(reviews => {
+                  dbPromise.then(db => { 
+                    let tx = db.transaction('reviews', 'readwrite'); 
+                    let objectStore = tx.objectStore('reviews'); 
+                    reviews.forEach(review => { 
+                      objectStore.put(review); 
+                    });
+                    resolve(reviews);
+                  });
+                })
+              }
+            })
+            .catch(error => {
+              console.log(error)
+            });
+          }
+          resolve(reviews);
+        })
+      })
     });
   }
 
@@ -32,31 +56,40 @@ class DBHelper {
    */
   static fetchRestaurants() {
     return new Promise((resolve, reject) => {
-      let restaurants = DBHelper.data;
-      if (restaurants === undefined) {
-        fetch(DBHelper.DATABASE_URL)
-        .then(response => response.json())
+     const dbPromise = DBHelper.initializeDB();
+      dbPromise.then(db => {
+        let tx = db.transaction(db.objectStoreNames, 'readonly');
+        tx.objectStore('restaurants').getAll()
         .then(data => {
-          restaurants = data;
-          resolve(restaurants);
-        })
-        .catch(error => { 
-          console.log(`Request failed. Error: ${error}`);
-          reject(error);
-        });
-      } else {
-        resolve(restaurants);
-      }       
+          if (data.length === 0) {
+            fetch(DBHelper.DATABASE_URL)
+            .then(response => response.json())
+            .then(restaurants => {
+              dbPromise.then((db) => { 
+                let tx = db.transaction('restaurants', 'readwrite'); 
+                let objectStore = tx.objectStore('restaurants'); 
+                restaurants.forEach(restaurant => { 
+                  objectStore.put(restaurant); 
+                });
+                resolve(restaurants);
+              });
+            });
+          } else {
+            resolve(data);
+          };
+        })     
+      });
     });
   }
 
   static initializeDB() {
     var dbPromise = idb.open('restaurants', 1, function(upgradeDb){ 
       if (!upgradeDb.objectStoreNames.contains('restaurants')) { 
-        upgradeDb.createObjectStore('restaurants', {keyPath: 'id'}); 
-        upgradeDb.createObjectStore('reviews', {keyPath: 'id'}); 
-        upgradeDb.createObjectStore('offline_reviews', {keyPath: 'id'}); 
-        upgradeDb.createObjectStore('offline_favorite', {keyPath: 'id'}); 
+        const restaurantsObject = upgradeDb.createObjectStore('restaurants', {keyPath: 'id'}); 
+        restaurantsObject.createIndex('offline', 'offline', { unique: false }); 
+        const reviewsObject = upgradeDb.createObjectStore('reviews', {keyPath: 'id'}); 
+        reviewsObject.createIndex('restaurant_id', 'restaurant_id', { unique: false })
+        reviewsObject.createIndex('offline', 'offline', { unique: false })
       } 
     });
     return dbPromise;
@@ -66,39 +99,37 @@ class DBHelper {
     if (navigator.onLine) {
       fetch(`${DBHelper.DATABASE_URL}/${id}/?is_favorite=${isFavorite}`, {
         method: 'PUT',
-      }).then(() => {
-        fetch(`${DBHelper.DATABASE_URL}/${id}/`);
+      }).then(response => {
+        if (response.ok) {
+          response.json()
+          .then(restaurant => {
+            DBHelper.initializeDB()
+            .then(db => {
+              let tx = db.transaction('restaurants', 'readwrite');
+              const objectStore = tx.objectStore('restaurants');
+              objectStore.put(restaurant);
+            })
+          })
+        }
       });
     } else {
-      const fav = {
-        id: id,
-        is_favorite: isFavorite,
-      }
       DBHelper.initializeDB()
       .then(db => {
-        let tx = db.transaction('offline_favorite', 'readwrite'); 
-        let objectStore = tx.objectStore('offline_favorite'); 
-          objectStore.openCursor(fav.id)
-          .then(cursor => {
-            if (cursor === undefined) {
-              objectStore.add(fav);
-            } else {
-              cursor.update(fav)
-            }
-          })
-     
+        let tx = db.transaction('restaurants', 'readwrite'); 
+        let objectStore = tx.objectStore('restaurants'); 
+        objectStore.openCursor(id)
+        .then(cursor => {
+          let restaurant = cursor._cursor.value;
+          restaurant.is_favorite = isFavorite;
+          restaurant.offline = 1;
+          if (cursor === undefined) {
+            objectStore.add(restaurant);
+          } else {
+            cursor.update(restaurant)
+          }
+        })
       });
     }
-
-    DBHelper.initializeDB()
-    .then(db => {
-      let tx = db.transaction('restaurants', 'readwrite'); 
-      let objectStore = tx.objectStore('restaurants'); 
-      return objectStore.openCursor(id);
-    }).then(cursor => {
-      cursor.update(self.restaurant);
-      window.cursor = cursor;
-    });
   }
 
   static addReview(restaurant_id, name, rating, comments) {
@@ -110,22 +141,32 @@ class DBHelper {
         comments
       }
       if (navigator.onLine) {
-        DBHelper.fetchReview(review)
-        .then(response => {
-          response.json()
-          .then(data => {
-            DBHelper.putReviewToIndexedDb(data);
-            resolve(data);
-          })
+        fetch('http://localhost:1337/reviews/', {
+          method: 'POST',
+          body: JSON.stringify(review),
+        }).then(response => {
+          if (response.ok) {
+            response.json()
+            .then(review => {
+              DBHelper.initializeDB()
+              .then(db => {
+                let tx = db.transaction('reviews', 'readwrite');
+                const objectStore = tx.objectStore('reviews');
+                objectStore.put(review);
+                resolve(review);
+              })
+            })
+          }
         })
         .catch(error => {
-          console.log(error)
-          reject(error);
+          DBHelper.addReviewToIndexedDb(review)
+          .then((review) => resolve(review));
         });
       } else {
-        DBHelper.addReviewToIndexedDb(review);
+        DBHelper.addReviewToIndexedDb(review)
+        .then((review) => resolve(review));
       }
-    })
+    });
   }
 
   static fetchReview(review) {
@@ -138,26 +179,18 @@ class DBHelper {
     })
   }
 
-  static putReviewToIndexedDb(review) {
-    review.type = 'review';
-    console.log(review)
-    DBHelper.initializeDB()
-    .then(db => {
-      let tx = db.transaction('reviews', 'readwrite'); 
-      let objectStore = tx.objectStore('reviews'); 
-      objectStore.put(review);
-    });
-  }
-
   static addReviewToIndexedDb(review) {
-    review.type = 'review';
-    review.id = Date.now();
-    DBHelper.initializeDB()
-    .then(db => {
-      let tx = db.transaction('offline_reviews', 'readwrite'); 
-      let objectStore = tx.objectStore('offline_reviews'); 
-      objectStore.add(review);
-    });
+    return new Promise(resolve => {
+      review.offline = 1;
+      review.id = Date.now();
+      DBHelper.initializeDB()
+      .then(db => {
+        let tx = db.transaction('reviews', 'readwrite'); 
+        let objectStore = tx.objectStore('reviews'); 
+        objectStore.add(review);
+      });
+      resolve(review);
+    })
   }
 
   /**
@@ -172,8 +205,11 @@ class DBHelper {
           if (restaurant) { // Got the restaurant
             DBHelper.fetchReviews(id)
             .then(reviews => {
-              restaurant.reviews = reviews;
+              self.reviews = reviews;
               resolve(restaurant);
+            })
+            .catch(error => {
+              self.reviews = [];
             });
           } else { // Restaurant does not exist in the database
             reject('Restaurant does not exist');
