@@ -9,12 +9,10 @@ var markers = []
     entries => {
       entries.forEach(entry => {
         if (entry.intersectionRatio > 0.3) {
-        console.log(entry);
           let image = entry.target.firstChild;
           image.src = image.dataset.src;
         }
       })
-      console.log(entries);
     },
     {
      root: document.querySelector('#scrollArea'),
@@ -27,60 +25,12 @@ var markers = []
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-
-  const dbPromise = DBHelper.initializeDB();
-  dbPromise.then(function(db) {
-    let tx = db.transaction(db.objectStoreNames, 'readonly');
-    const objectStore = tx.objectStore('restaurants');
-    const data = objectStore.getAll()
-    .then(data => {
-      if (data.length === 0) {
-        fetch(DBHelper.DATABASE_URL).then((response) => {
-          response.json()
-          .then(restaurants => {
-            dbPromise.then((db) => { 
-              let tx = db.transaction('restaurants', 'readwrite'); 
-              let objectStore = tx.objectStore('restaurants'); 
-              restaurants.forEach(restaurant => { 
-                objectStore.put(restaurant); 
-              });
-            });
-          })
-        });
-      } else {
-        DBHelper.data = data;
-      };
-    })
-    .then(data => {
+    DBHelper.fetchRestaurants()
+    .then(() => DBHelper.fetchReviews())
+    .then(() => {
       fetchNeighborhoods();
       fetchCuisines();
     });    
-
-    const reviewsObjectStore = tx.objectStore('reviews');
-    const reviewsData = objectStore.getAll()
-    .then(reviewsData => {
-      if (reviewsData.length === 0) {
-        fetch(`http://localhost:1337/reviews/`).then((response) => {
-          response.json()
-          .then(reviews => {
-            dbPromise.then((db) => { 
-              let tx = db.transaction('reviews', 'readwrite'); 
-              let objectStore = tx.objectStore('reviews'); 
-              reviews.forEach(review => { 
-                objectStore.put(review); 
-              });
-            });
-          })
-        });
-      } else {
-        DBHelper.reviews = reviews;
-      };
-    });
-  })
-  .then(data => {
-    fetchNeighborhoods();
-    fetchCuisines();
-  });
 });
 
 /**
@@ -150,6 +100,10 @@ window.initMap = () => {
     zoom: 12,
     center: loc,
     scrollwheel: false,
+  });
+
+  map.addListener('tilesloaded', function() {
+    document.getElementById('map-container').style.height = '400px';
   });
 
   updateRestaurants();

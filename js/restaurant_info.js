@@ -120,14 +120,14 @@ addReview = () => {
   DBHelper.addReview(idRestaurant, name, rating, comment)
   .then(review => {
     const ul = document.getElementById('reviews-list');
-    ul.appendChild(createReviewHTML(review));
+    ul.prepend(createReviewHTML(review));
   })
 }
 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (reviews = self.reviews) => {
   const container = document.getElementById('reviews-container');
   const button = document.getElementById('add-review-button');
   const rating = document.getElementById('rating');
@@ -138,7 +138,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     rating.appendChild(option);
   }
 
-  if (!reviews) {
+  if (!reviews.length) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
     container.appendChild(noReviews);
@@ -163,7 +163,7 @@ createReviewHTML = (review) => {
 
   const date = document.createElement('p');
   date.setAttribute('class', 'date');
-  const newDate = new Date(review.updatedAt) 
+  const newDate = new Date(review.updatedAt !== undefined ? review.updatedAt : review.id); 
   date.innerHTML = `${newDate.getDay()}/${newDate.getMonth()}/${newDate.getFullYear()}`;
 
   top.appendChild(name);

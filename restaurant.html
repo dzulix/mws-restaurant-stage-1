@@ -16,33 +16,33 @@
   </style>
   <link rel="manifest" href="/manifest.json">
     <script>
+      registerSync = (tag, registration) => {
+        registration.sync.register(tag)
+        .then(() => {
+          console.log('sync registered ', tag);
+        })
+        .catch(function(error){
+          console.log('Unable to fetch ', tag);
+        });
+      }
     (() => {
       'use strict';
           // Service Worker code
     if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./service-worker.js').then((registration) => {
+          navigator.serviceWorker.register('service-worker.js').then((registration) => {
           return navigator.serviceWorker.ready;
         }).then((registration) => {
           // register sync
           document.getElementById('add-review-button').addEventListener('click', () => {
-            registration.sync.register('reviews-fetch')
-            .then(() => {
-              console.log('sync registered');
-            })
-            .catch(function(error){
-              console.log('Unable to fetch reviews.');
-            });
+            registerSync('offline-reviews-fetch', registration);
           });
-
           document.getElementById('favorite').addEventListener('click', () => {
-            registration.sync.register('favorite-fetch')
-            .then(() => {
-              console.log('sync registered');
-            })
-            .catch(function(error){
-              console.log('Unable to fetch reviews.');
-            });
+            registerSync('favorite-fetch', registration);
           });
+/*          window.addEventListener('online', () => {
+            registerSync('restaurants-fetch', registration);
+            registerSync('reviews-fetch', registration);
+          });*/
         }).catch(function(error){
           console.log('Unable to register Service Worker.');
         });
@@ -126,7 +126,6 @@
   <!-- Beginning scripts -->
   <!-- Database helpers -->
   <script src="/node_modules/idb/lib/idb.js"></script>
-
   <script type="text/javascript" src="js/dbhelper.js"></script>
   <!-- Main javascript file -->
   <script type="text/javascript" src="js/restaurant_info.js"></script>
